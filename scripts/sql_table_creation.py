@@ -80,6 +80,42 @@ create table if not exists production_medications (
 table_prod_treatment_procedures = """
 create table if not exists production_treatment_procedures(
     id int auto_incrememt,
-    
+    cpt_code varchar(255) default null unique,
+    cpt_name varchar(255) default null,
+    PRIMARY KEY (id)
 );
 """
+
+## Creating conditions table
+table_prod_conditions = """
+create table if not exists production_conditions(
+    id int auto_incrememt,
+    icd10_code varchar(255) default null unique,
+    icd10_description varchar(255) default null,
+    PRIMARY KEY (id)
+);
+"""
+
+## Creating social determinants table
+table_prod_social_determinants = """
+create table if not exists production_social_determinants(
+    id int auto_incrememt,
+    loinc_code varchar(255) default null unique,
+    loinc_description varchar(255) default null,
+    PRIMARY KEY (id)
+);
+"""
+
+## Executing table creation
+db_gcp.execute(table_prod_patients)
+db_gcp.execute(table_prod_medications)
+db_gcp.execute(table_prod_treatment_procedures)
+db_gcp.execute(table_prod_conditions)
+db_gcp.execute(table_prod_social_determinants)
+
+## Pulling database names
+tableNames_gcp = db_gcp.table_names()
+
+## Dropping limited
+drop_tables_limited(tableNames_gcp, db_gcp)
+
