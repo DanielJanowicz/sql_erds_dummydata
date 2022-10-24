@@ -56,3 +56,45 @@ for index, row in df_fake_patients.iterrows():
 
 ## Checking patients table
 df_gcp = pd.read_sql_query("SELECT * FROM production_patients", db_gcp)
+
+## Loading in real ICD10 codes
+icd10codes = pd.read_csv('https://raw.githubusercontent.com/Bobrovskiy/ICD-10-CSV/master/2020/diagnosis.csv')
+list(icd10codes.columns)
+icd10codesShort = icd10codes[['CodeWithSeparator', 'ShortDescription']]
+icd10codesShort_1k = icd10codesShort.sample(n=1000, random_state=1)
+
+## Droping duplicate codes
+icd10codesShort_1k = icd10codesShort_1k.drop_duplicates(subset=['CodeWithSeparator'], keep='first')
+
+## Moving information to conditions table
+insertQuery = "INSERT INTO production_conditions (icd10_code, icd10_description) VALUES (%s, %s)"
+
+startingRow = 0
+for index, row in icd10codesShort_1k.iterrows():
+    startingRow += 1
+    db_gcp.execute(insertQuery, (row['CodeWithSeparator'], row['ShortDescription']))
+    print("inserted row db_gcp: ", index)
+    if startingRow == 100:
+        break
+
+df_gcp = pd.read_sql_query("SELECT * FROM production_conditions", db_gcp)
+
+## Loading in real NDC codes
+ndc_codes = pd.read_csv('https://raw.githubusercontent.com/hantswilliams/FDA_NDC_CODES/main/NDC_2022_product.csv')
+ndc_codes_1k = ndc_codes.sample(n=1000, random_state=1)
+
+## Dropping duplicates codes
+ndc_codes_1k = ndc_codes_1k.drop_duplicates(subset=['PRODUCTNDC'], keep='first')
+
+## Moving information to medications table
+insertQuery = "INSERT INTO production_medications (med_ndc, med_name) VALUES (%s, %s)"
+
+medRowCount = 0
+for index, row in ndc_codes_1k.iterrows():
+    medRowCount += 1
+    db_gcp.execute(insertQuery, (row['PRODUCTNDC'], row['NONPROPRIETARYNAME']))
+    print("inserted row: ", index)
+    if medRowCount == 100:
+        break
+
+df_gcp = pd.read_sql_query("SELECT * FROM production_medications", db_gcp)
