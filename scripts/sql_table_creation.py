@@ -51,7 +51,7 @@ drop_tables_all(tableNames_gcp, db_gcp)
 ## Creating patients table
 table_prod_patients = """
 create table if not exists production_patients (
-    id int auto_incrememt,
+    id int auto_increment,
     mrn varchar(255) default null unique,
     first_name varchar(255) default null,
     last_name varchar(255) default null,
@@ -68,7 +68,7 @@ create table if not exists production_patients (
 ## Creating medications table
 table_prod_medications = """
 create table if not exists production_medications (
-    id int auto_incrememt,
+    id int auto_increment,
     med_ndc varchar(255) default null,
     med_name varchar(255) default null,
     med_is_dangerous varchar(255) default null,
@@ -79,7 +79,7 @@ create table if not exists production_medications (
 ## Creating treatment_procedures table
 table_prod_treatment_procedures = """
 create table if not exists production_treatment_procedures(
-    id int auto_incrememt,
+    id int auto_increment,
     cpt_code varchar(255) default null unique,
     cpt_name varchar(255) default null,
     PRIMARY KEY (id)
@@ -89,7 +89,7 @@ create table if not exists production_treatment_procedures(
 ## Creating conditions table
 table_prod_conditions = """
 create table if not exists production_conditions(
-    id int auto_incrememt,
+    id int auto_increment,
     icd10_code varchar(255) default null unique,
     icd10_description varchar(255) default null,
     PRIMARY KEY (id)
@@ -99,7 +99,7 @@ create table if not exists production_conditions(
 ## Creating social determinants table
 table_prod_social_determinants = """
 create table if not exists production_social_determinants(
-    id int auto_incrememt,
+    id int auto_increment,
     loinc_code varchar(255) default null unique,
     loinc_description varchar(255) default null,
     PRIMARY KEY (id)
@@ -119,3 +119,35 @@ tableNames_gcp = db_gcp.table_names()
 ## Dropping limited
 drop_tables_limited(tableNames_gcp, db_gcp)
 
+########## Creating new tables with foreign keys ##########
+
+## Creating patients medication table                               ######### Requires assistance (FK)
+table_prod_patients_medications = """
+create table if not exists production_patients_medications (
+    id int auto_increment,
+    mrn varchar(255) default null,
+    med_ndc varchar(255) default null,
+    PRIMARY KEY (id),
+    FOREIGN KEY (mrn) REFERENCES production_patients(mrn) ON DELETE CASCADE,
+    FOREIGN KEY (med_ndc) REFERENCES production_medications(med_ndc) ON DELETE CASCADE
+);
+"""
+
+## Creating patients conditions table
+table_prod_patients_conditions = """
+create table if not exists production_patients_conditions (
+    id int auto_increment,
+    mrn varchar(255) default null,
+    icd10_code varchar(255) default null,
+    PRIMARY KEY (id),
+    FOREIGN KEY (mrn) REFERENCES production_patients(mrn) ON DELETE CASCADE,
+    FOREIGN KEY (icd10_code) REFERENCES production_conditions(icd10_code) ON DELETE CASCADE
+);
+"""
+
+## Executing table creation
+db_gcp.execute(table_prod_patients_medications)
+db_gcp.execute(table_prod_patients_conditions)
+
+## Pulling database names
+tableNames_gcp = db_gcp.table_names()

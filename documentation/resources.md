@@ -1,4 +1,5 @@
-https://pypi.org/project/Faker/ 
+# Resources:
+I used the [faker documentation](https://pypi.org/project/Faker/) to help with creating fake patient information.
 
-https://www.mysql.com/products/workbench/ 
+I also utilized [MYSQL Workbench](https://www.mysql.com/products/workbench/) for database management and visualization. 
 
