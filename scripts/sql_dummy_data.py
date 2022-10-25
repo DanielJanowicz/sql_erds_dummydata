@@ -98,3 +98,45 @@ for index, row in ndc_codes_1k.iterrows():
         break
 
 df_gcp = pd.read_sql_query("SELECT * FROM production_medications", db_gcp)
+
+## Pairing conditions to patients
+df_conditions = pd.read_sql_query("SELECT icd10_code FROM production_conditions", db_gcp)
+df_patients = pd.read_sql_query("SELECT mrn FROM production_patients", db_gcp)
+
+df_patient_conditions = pd.DataFrame(columns=['mrn', 'icd10_code'])
+for index, row in df_patients.iterrows():
+    numConditions = random.randint(1, 5)
+    df_conditions_sample = df_conditions.sample(n=numConditions)
+    df_conditions_sample['mrn'] = row['mrn']
+    df_patient_conditions = df_patient_conditions.append(df_conditions_sample)
+
+print(df_patient_conditions)
+
+## Adding random condition to patient_conditions
+insertQuery = "INSERT INTO production_patients_conditions (mrn, icd10_code) VALUES (%s, %s)"
+
+for index, row in df_patient_conditions.iterrows():
+    db_gcp.execute(insertQuery, (row['mrn'], row['icd10_code']))
+    print("inserted row: ", index)
+
+## Loading in real CPT codes
+cptcodes = pd.read_csv('https://gist.githubusercontent.com/lieldulev/439793dc3c5a6613b661c33d71fdd185/raw/25c3abcc5c24e640a0a5da1ee04198a824bf58fa/cpt4.csv')
+list(cptcodes.columns)
+cptcodesShort = cptcodes[['com.medigy.persist.reference.type.clincial.CPT.code', 'label']]
+cptcodesShort_1k = cptcodesShort.sample(n=1000, random_state=1)
+
+## Droping duplicate codes
+cptcodesShort_1k = cptcodesShort_1k.drop_duplicates(subset=['com.medigy.persist.reference.type.clincial.CPT.code'], keep='first')
+
+## Moving information to conditions table
+insertQuery = "INSERT INTO production_treatment_procedures (cpt_code, cpt_name) VALUES (%s, %s)"
+
+startingRow = 0
+for index, row in cptcodesShort_1k.iterrows():
+    startingRow += 1
+    db_gcp.execute(insertQuery, (row['com.medigy.persist.reference.type.clincial.CPT.code'], row['label']))
+    print("inserted row db_gcp: ", index)
+    if startingRow == 100:
+        break
+
+df_gcp = pd.read_sql_query("SELECT * FROM production_treatment_procedures", db_gcp)
