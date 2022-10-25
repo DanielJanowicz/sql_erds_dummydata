@@ -125,7 +125,7 @@ list(cptcodes.columns)
 cptcodesShort = cptcodes[['com.medigy.persist.reference.type.clincial.CPT.code', 'label']]
 cptcodesShort_1k = cptcodesShort.sample(n=1000, random_state=1)
 
-## Droping duplicate codes
+## Dropping duplicate codes
 cptcodesShort_1k = cptcodesShort_1k.drop_duplicates(subset=['com.medigy.persist.reference.type.clincial.CPT.code'], keep='first')
 
 ## Moving information to conditions table
@@ -140,3 +140,25 @@ for index, row in cptcodesShort_1k.iterrows():
         break
 
 df_gcp = pd.read_sql_query("SELECT * FROM production_treatment_procedures", db_gcp)
+
+## Loading in real LOINC codes
+loinc_codes = pd.read_csv('Loinc.csv')
+list(loinc_codes.columns)
+loinc_codes_short = loinc_codes[['LOINC_NUM', 'LONG_COMMON_NAME']]
+loinc_codes_short_1k = loinc_codes_short.sample(n=1000, random_state=1)
+
+## Dropping duplicates codes
+loinc_codes_short_1k = loinc_codes_short_1k.drop_duplicates(subset=['LOINC_NUM'], keep='first')
+
+## Moving information to conditions table
+insertQuery = "INSERT INTO production_social_determinants (loinc_code, loinc_description) VALUES (%s, %s)"
+
+startingRow = 0
+for index, row in loinc_codes_short_1k.iterrows():
+    startingRow += 1
+    db_gcp.execute(insertQuery, (row['LOINC_NUM'], row['LONG_COMMON_NAME']))
+    print("inserted row db_gcp: ", index)
+    if startingRow == 100:
+        break
+
+df_gcp = pd.read_sql_query("SELECT * FROM production_social_determinants", db_gcp)
