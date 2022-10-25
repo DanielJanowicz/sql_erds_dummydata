@@ -1,5 +1,5 @@
 # SQL ERD
-(na)
+![ERD](/images/erd.png)
 
 ## All databases
 ![Databases](/images/databases.png)
