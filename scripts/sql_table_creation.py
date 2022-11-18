@@ -71,7 +71,6 @@ create table if not exists production_medications (
     id int auto_increment,
     med_ndc varchar(255) default null,
     med_name varchar(255) default null,
-    med_is_dangerous varchar(255) default null,
     PRIMARY KEY (id)
 );
 """

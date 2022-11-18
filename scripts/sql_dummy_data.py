@@ -31,11 +31,11 @@ fake = Faker()
 
 fake_patients = [
     {
-        'mrn': str(uuid.uuid4())[:8],
+        'mrn': str('E' + str(random.randint(11111, 99999))),
         'first_name': fake.first_name(),
         'last_name': fake.last_name(),
         'date_of_birth': fake.date_of_birth(),
-        'gender': fake.random_element(elements=('M', 'F')),
+        'facility': str('0' + str(random.randint(1, 5))),
         'ssn': fake.ssn(),
         'zip_code': fake.zipcode(),
         'contact_mobile': fake.phone_number(),
@@ -51,7 +51,7 @@ df_fake_patients.drop_duplicates(subset=['mrn'], inplace=True)
 insertQuery = "INSERT INTO production_patients (mrn, first_name, last_name, date_of_birth, gender, ssn, zip_code, contact_mobile, contact_email) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
 for index, row in df_fake_patients.iterrows():
-    db_gcp.execute(insertQuery, (row['mrn'], row['first_name'], row['last_name'], row['date_of_birth'], row['gender'], row['ssn'], row['zip_code'], row['contact_mobile'], row['contact_email']))
+    db_gcp.execute(insertQuery, (row['mrn'], row['first_name'], row['last_name'], row['date_of_birth'], row['facility'], row['ssn'], row['zip_code'], row['contact_mobile'], row['contact_email']))
     print("Inserting row: ", index)
 
 ## Checking patients table
@@ -162,3 +162,9 @@ for index, row in loinc_codes_short_1k.iterrows():
         break
 
 df_gcp = pd.read_sql_query("SELECT * FROM production_social_determinants", db_gcp)
+
+
+## Manually pairing information for patients_medications
+# **Note** This is not a good way to do this, but it is a way to get the data in the database
+# This is due in part to SQL workbench not detecting the FK relationship between main medications and this table medications
+
